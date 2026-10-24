@@ -1,0 +1,47 @@
+# Deploys the app to GitHub Pages on every push to main.
+# It runs the unit tests first, then stamps the service worker with the commit id
+# so installed phones see "Update available".
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Unit tests
+        run: npm test
+      - name: Build site folder
+        run: |
+          mkdir _site
+          cp -R index.html manifest.webmanifest sw.js css js data templates icons _site/
+          BUILD="${GITHUB_SHA::7}"
+          sed -i "s/const VERSION = 'dev';/const VERSION = '${BUILD}';/" _site/sw.js
+          sed -i "s/export const BUILD = 'dev';/export const BUILD = '${BUILD}';/" _site/js/app.js
+          grep -q "const VERSION = '${BUILD}'" _site/sw.js
+          grep -q "export const BUILD = '${BUILD}'" _site/js/app.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
