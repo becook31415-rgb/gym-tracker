@@ -1,11 +1,20 @@
-# Personal data must never be committed: exports, backups and your own programs/logs.
-workout-log_*.json
-workout-sets_*.csv
-workout-cardio_*.csv
-*backup*.json
+# PRIVATE DATA MUST NEVER BE COMMITTED (this repo is public).
+# Keep your real program/history files OUT of this folder. If you must put them here,
+# use import-data/ or private/, which are ignored.
+import-data/
+private/
 exports/
 backups/
-private/
+
+# Every JSON and CSV file is ignored by default (exports, backups, programs, logs)...
+*.json
+*.csv
+# ...except these known, made-up or code files:
+!/package.json
+!/data/sample-program.json
+!/data/sample-history.json
+!/templates/program-template.json
+!/templates/program-template.csv
 
 # Tools and OS clutter
 node_modules/

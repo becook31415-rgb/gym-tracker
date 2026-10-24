@@ -411,7 +411,7 @@
               "weight": 75,
               "reps": 4,
               "rpe": null,
-              "set_note": "narrower grip",
+              "set_note": "close grip",
               "completed": true,
               "unit": "kg"
             },
@@ -420,7 +420,7 @@
               "weight": 75,
               "reps": 4,
               "rpe": null,
-              "set_note": "narrower grip",
+              "set_note": "close grip",
               "completed": true,
               "unit": "kg"
             }
@@ -746,36 +746,37 @@
           "skipped": false,
           "exercise_note": null,
           "pinned_note": null,
-          "load_basis": "added",
+          "load_basis": "assist",
           "per_side": false,
           "type": "bodyweight",
+          "unit": "lb",
           "sets": [
             {
               "set_number": 1,
-              "weight": null,
+              "weight": 70,
               "reps": 3,
               "rpe": null,
-              "set_note": "4 sec eccentric",
+              "set_note": "slow lowering",
               "completed": true,
-              "unit": "kg"
+              "unit": "lb"
             },
             {
               "set_number": 2,
-              "weight": null,
+              "weight": 60,
               "reps": 3,
               "rpe": null,
               "set_note": null,
               "completed": true,
-              "unit": "kg"
+              "unit": "lb"
             },
             {
               "set_number": 3,
-              "weight": null,
+              "weight": 60,
               "reps": 3,
               "rpe": null,
               "set_note": null,
               "completed": true,
-              "unit": "kg"
+              "unit": "lb"
             }
           ]
         },

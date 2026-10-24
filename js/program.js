@@ -11,7 +11,7 @@ const EX_KEYS = ['order', 'exercise_id', 'name', 'alternatives', 'type', 'group'
   'superset_group', 'cardio'];
 const CARDIO_KEYS = ['cardio_type', 'duration_min', 'intensity'];
 const TYPES = ['strength', 'bodyweight', 'cardio'];
-const LOAD_BASES = ['total', 'per_hand', 'per_side', 'added'];
+const LOAD_BASES = ['total', 'per_hand', 'per_side', 'added', 'assist'];
 const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_ERRORS = 40;
@@ -123,7 +123,7 @@ function validateExercise(ex, where, ids, orders, errors) {
   if (!isNumOrNull(ex.target_weight)) errors.push(`${where}: "target_weight" must be a number or null.`);
   if (ex.rpe != null && typeof ex.rpe !== 'string' && !(typeof ex.rpe === 'number' && Number.isFinite(ex.rpe))) errors.push(`${where}: "rpe" must be text, a number or null.`);
   if (ex.per_side != null && typeof ex.per_side !== 'boolean') errors.push(`${where}: "per_side" must be true or false.`);
-  if (ex.load_basis != null && !LOAD_BASES.includes(ex.load_basis)) errors.push(`${where}: "load_basis" must be one of "total", "per_hand", "per_side", "added".`);
+  if (ex.load_basis != null && !LOAD_BASES.includes(ex.load_basis)) errors.push(`${where}: "load_basis" must be one of "total", "per_hand", "per_side", "added", "assist".`);
   for (const k of ['group', 'sets_note', 'prescription_note', 'cues', 'progression', 'notes', 'superset_group']) {
     if (!isStrOrNull(ex[k])) errors.push(`${where}: ${q(k)} must be text or null.`);
   }

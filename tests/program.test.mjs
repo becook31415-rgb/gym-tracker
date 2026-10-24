@@ -142,3 +142,14 @@ test('shipped CSV template is valid', () => {
   const r = csvToProgram(readFileSync(new URL('../templates/program-template.csv', import.meta.url), 'utf8'), 'Template');
   assert.equal(r.ok, true, r.errors.join('\n'));
 });
+
+test('assist load basis, "max"/"near max" reps and null sets/reps/rpe are accepted', () => {
+  const p = base();
+  Object.assign(p.weeks[0].days[0].exercises[2], { load_basis: 'assist', reps: 'max', sets: null, rpe: null });
+  p.weeks[0].days[0].exercises[1].reps = null;
+  p.weeks[0].days[0].exercises[0].reps = 'near max';
+  const r = validateProgram(p);
+  assert.equal(r.ok, true, r.errors.join('\n'));
+  assert.equal(r.program.weeks[0].days[0].exercises[2].load_basis, 'assist');
+  assert.equal(r.program.weeks[0].days[0].exercises[2].sets, null);
+});

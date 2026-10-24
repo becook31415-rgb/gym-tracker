@@ -3,7 +3,8 @@
 
 export const KG_PER_LB = 0.45359237;
 export const UNITS = ['kg', 'lb'];
-export const LOAD_BASES = ['total', 'per_hand', 'per_side', 'added'];
+// 'assist' = assistance given by a machine (e.g. pull-up assist): lower is better.
+export const LOAD_BASES = ['total', 'per_hand', 'per_side', 'added', 'assist'];
 
 // Parse a number typed by the user. Accepts "102.5" and "102,5". Blank -> null.
 export function parseNum(value) {
@@ -60,19 +61,23 @@ export function loadBasisLabel(loadBasis, unit) {
     case 'per_hand': return `${unit} per hand`;
     case 'per_side': return `${unit} per side`;
     case 'added': return `${unit} added`;
+    case 'assist': return `${unit} assist`;
     default: return unit;
   }
 }
 
+// Blank/0 weight means "bodyweight only". Not for 'assist', where the number is the assistance.
 export function isBodyweightExercise(ex) {
+  if (ex.load_basis === 'assist') return false;
   return ex.type === 'bodyweight' || ex.load_basis === 'added';
 }
 
-// Short text for one weight, e.g. "110kg", "BW", "BW+6kg", "22kg/hand".
+// Short text for one weight, e.g. "110kg", "BW", "BW+6kg", "60lb assist".
 export function weightText(weight, unit, displayUnit, ex) {
   const bw = isBodyweightExercise(ex);
   if (weight === null || weight === undefined || (bw && weight === 0)) return bw ? 'BW' : '–';
   const n = fmt(displayNumber(weight, unit, displayUnit));
   if (bw) return `BW+${n}${displayUnit}`;
+  if (ex.load_basis === 'assist') return weight === 0 ? 'no assist' : `${n}${displayUnit} assist`;
   return `${n}${displayUnit}`;
 }

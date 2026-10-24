@@ -54,3 +54,10 @@ test('compares across units (kg vs lb)', () => {
   // 100 kg = 220.46 lb
   assert.deepEqual(pbFlags([s(100, 5)], [s(225, 1, 'lb'), s(215, 10, 'lb')]), [true, false]);
 });
+
+test('assisted exercises: less assistance is a PB; same assistance with more reps too', () => {
+  const opts = { lowerIsBetter: true };
+  const a = (w, r) => s(w, r, 'lb');
+  assert.deepEqual(pbFlags([a(60, 3), a(50, 3)], [a(50, 3), a(40, 3), a(40, 4), a(60, 8)], opts), [false, true, true, false]);
+  assert.deepEqual(pbFlags([a(40, 3)], [a(0, 3)], opts), [true]);
+});

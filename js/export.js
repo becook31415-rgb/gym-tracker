@@ -2,7 +2,8 @@
 // The code that actually hands files to iOS lives in exporter.js.
 
 import { toCSV } from './csv.js';
-import { sortSessions } from './history.js';
+import { sortSessions, kindOf, setUnit } from './history.js';
+import { LOAD_BASES, UNITS } from './units.js';
 
 export const LOG_SCHEMA_VERSION = 1;
 
@@ -36,13 +37,13 @@ const real = (sessions) => sessions.filter((s) => !s.demo);
 // One row per confirmed set. Skipped exercises have no rows (they are in the JSON log).
 export function buildSetRows(sessions) {
   const rows = [];
-  for (const s of sortSessions(real(sessions)).filter((x) => x.kind === 'workout')) {
+  for (const s of sortSessions(real(sessions)).filter((x) => kindOf(x) === 'workout')) {
     for (const ex of s.exercises || []) {
       if (ex.skipped || ex.type === 'cardio') continue;
       const sets = [...(ex.sets || [])].filter((st) => st.completed).sort((a, b) => a.set_number - b.set_number);
       for (const st of sets) {
         rows.push([s.session_id, s.date, s.week, s.day_name, ex.exercise_id, ex.name_performed, st.set_number,
-          st.weight, st.unit || s.unit, ex.load_basis, ex.per_side, st.reps, st.rpe, st.set_note, s.session_notes, s.program_name]);
+          st.weight, setUnit(st, ex, s), ex.load_basis, ex.per_side, st.reps, st.rpe, st.set_note, s.session_notes, s.program_name]);
       }
     }
   }
@@ -53,9 +54,9 @@ export function buildSetRows(sessions) {
 export function buildCardioRows(sessions) {
   const rows = [];
   for (const s of sortSessions(real(sessions))) {
-    if (s.kind === 'cardio') {
+    if (kindOf(s) === 'cardio') {
       rows.push([s.session_id, s.date, s.start_time, s.cardio_type, s.duration_min, s.intensity_rpe, s.notes, 'standalone', '']);
-    } else if (s.kind === 'workout') {
+    } else {
       for (const ex of s.exercises || []) {
         if (ex.type !== 'cardio' || ex.skipped || !ex.cardio || !ex.cardio.completed) continue;
         rows.push([s.session_id, s.date, s.start_time, ex.cardio.cardio_type, ex.cardio.duration_min, ex.cardio.intensity_rpe,
@@ -72,8 +73,8 @@ export function buildLog(sessions, pins, now) {
     schema_version: LOG_SCHEMA_VERSION,
     app: 'gym-tracker',
     exported_at: localISO(now),
-    sessions: r.filter((s) => s.kind === 'workout'),
-    cardio_sessions: r.filter((s) => s.kind === 'cardio'),
+    sessions: r.filter((s) => kindOf(s) === 'workout'),
+    cardio_sessions: r.filter((s) => kindOf(s) === 'cardio'),
     pinned_notes: pins.filter((p) => !p.demo),
   };
 }
@@ -104,16 +105,80 @@ export function exportReminderDue(sessions, lastExportAt, now) {
 
 // ---------------- Restore from backup ----------------
 
-export function validateBackup(obj) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return 'This is not a workout-log backup file.';
-  if (obj.app !== 'gym-tracker' || !Array.isArray(obj.sessions)) return 'This is not a workout-log backup file (expected a workout-log_….json exported by this app).';
-  if (obj.schema_version !== LOG_SCHEMA_VERSION) return `This backup uses schema version ${obj.schema_version}, which this app does not understand.`;
-  const all = [...obj.sessions, ...(obj.cardio_sessions || [])];
-  for (const [i, s] of all.entries()) {
-    if (!s || typeof s.session_id !== 'string' || !s.session_id) return `Session ${i + 1} has no session_id.`;
-    if (s.kind !== 'workout' && s.kind !== 'cardio') return `Session ${i + 1} has an unknown kind.`;
+const isNumOrNull = (v) => v === null || v === undefined || (typeof v === 'number' && Number.isFinite(v));
+
+/**
+ * Check a workout-log backup (this app's export, or a hand-made file in the same shape).
+ * Nothing is rewritten except filling in a missing "kind". Returns every problem found.
+ * @returns {{errors: string[], warnings: string[], backup: object|null, counts: {sessions, cardio, sets}}}
+ */
+export function checkBackup(obj) {
+  const errors = [];
+  const warnings = [];
+  const counts = { sessions: 0, cardio: 0, sets: 0 };
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || !Array.isArray(obj.sessions)) {
+    return { errors: ['This is not a workout-log backup file (it needs a "sessions" list).'], warnings, backup: null, counts };
   }
-  return null;
+  if (obj.schema_version !== LOG_SCHEMA_VERSION) errors.push(`"schema_version" must be ${LOG_SCHEMA_VERSION} (got ${JSON.stringify(obj.schema_version)}).`);
+  if (obj.app !== undefined && obj.app !== 'gym-tracker') errors.push(`"app" is ${JSON.stringify(obj.app)}, expected "gym-tracker".`);
+  if (obj.app === undefined) warnings.push('No "app" field; treated as a gym-tracker log because the structure matches.');
+  if (obj.cardio_sessions !== undefined && !Array.isArray(obj.cardio_sessions)) errors.push('"cardio_sessions" must be a list.');
+  if (obj.pinned_notes !== undefined && !Array.isArray(obj.pinned_notes)) errors.push('"pinned_notes" must be a list.');
+
+  const ids = new Set();
+  let missingKind = 0;
+  let missingUpdated = 0;
+  const all = [...obj.sessions, ...(Array.isArray(obj.cardio_sessions) ? obj.cardio_sessions : [])];
+  const sessions = all.map((s, i) => {
+    let where = `Session ${i + 1}`;
+    if (!s || typeof s !== 'object') { errors.push(`${where}: must be an object.`); return s; }
+    where += s.date ? ` (${s.date}${s.week != null ? `, week ${s.week}` : ''}${s.day_name ? `, ${s.day_name}` : ''})` : '';
+    if (typeof s.session_id !== 'string' || !s.session_id) errors.push(`${where}: "session_id" is missing.`);
+    else if (ids.has(s.session_id)) errors.push(`${where}: session_id ${s.session_id} appears twice.`);
+    else ids.add(s.session_id);
+    if (typeof s.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s.date)) errors.push(`${where}: "date" must look like "2026-09-14".`);
+    if (s.updated_at === undefined) missingUpdated++;
+    if (s.kind !== undefined && s.kind !== 'workout' && s.kind !== 'cardio') errors.push(`${where}: "kind" must be "workout" or "cardio".`);
+    const out = s.kind ? s : { ...s, kind: kindOf(s) };
+    if (!s.kind) missingKind++;
+    if (out.kind === 'cardio') { counts.cardio++; return out; }
+    counts.sessions++;
+    if (s.unit !== undefined && !UNITS.includes(s.unit)) errors.push(`${where}: "unit" must be "kg" or "lb".`);
+    if (!Array.isArray(s.exercises)) { errors.push(`${where}: "exercises" must be a list.`); return out; }
+    s.exercises.forEach((ex, ei) => {
+      const ew = `${where}, exercise ${ei + 1}${ex && ex.name_performed ? ` ("${ex.name_performed}")` : ''}`;
+      if (!ex || typeof ex !== 'object') { errors.push(`${ew}: must be an object.`); return; }
+      if (typeof ex.exercise_id !== 'string' || !ex.exercise_id) errors.push(`${ew}: "exercise_id" is missing.`);
+      if (ex.load_basis !== undefined && !LOAD_BASES.includes(ex.load_basis)) errors.push(`${ew}: "load_basis" ${JSON.stringify(ex.load_basis)} is not one of ${LOAD_BASES.join(', ')}.`);
+      if (ex.unit !== undefined && !UNITS.includes(ex.unit)) errors.push(`${ew}: "unit" must be "kg" or "lb".`);
+      if (!Array.isArray(ex.sets)) { errors.push(`${ew}: "sets" must be a list.`); return; }
+      ex.sets.forEach((st, si) => {
+        const sw = `${ew}, set ${si + 1}`;
+        counts.sets++;
+        if (!st || typeof st !== 'object') { errors.push(`${sw}: must be an object.`); return; }
+        if (!Number.isInteger(st.set_number)) errors.push(`${sw}: "set_number" must be a whole number.`);
+        if (!isNumOrNull(st.weight)) errors.push(`${sw}: "weight" must be a number or null (got ${JSON.stringify(st.weight)}).`);
+        if (!(st.reps === null || st.reps === undefined || Number.isInteger(st.reps))) errors.push(`${sw}: "reps" must be a whole number or null (got ${JSON.stringify(st.reps)}).`);
+        if (!isNumOrNull(st.rpe)) errors.push(`${sw}: "rpe" must be a number or null.`);
+        if (st.unit !== undefined && !UNITS.includes(st.unit)) errors.push(`${sw}: "unit" must be "kg" or "lb".`);
+        if (typeof st.completed !== 'boolean') errors.push(`${sw}: "completed" must be true or false.`);
+      });
+    });
+    return out;
+  });
+  if (missingKind) warnings.push(`${missingKind} session(s) had no "kind"; set to "workout"/"cardio" from their contents.`);
+  if (missingUpdated) warnings.push(`${missingUpdated} session(s) have no "updated_at"; if the same session_id is already on this phone, the phone's copy is kept.`);
+  if (errors.length) return { errors: errors.slice(0, 40), warnings, backup: null, counts };
+  return {
+    errors, warnings, counts,
+    backup: { ...obj, sessions: sessions.filter((s) => s.kind === 'workout'), cardio_sessions: sessions.filter((s) => s.kind === 'cardio'), pinned_notes: obj.pinned_notes || [] },
+  };
+}
+
+// Short form used by older callers/tests: first error, or null when valid.
+export function validateBackup(obj) {
+  const r = checkBackup(obj);
+  return r.errors.length ? r.errors[0] : null;
 }
 
 /**

@@ -4,7 +4,7 @@ Tick each line as you go. If something fails, note the step number and what you 
 
 ## A. Install
 
-1. [ ] On the Mac, deploy (README → "Deploy: GitHub Pages") and wait for the workflow to go green.
+1. [ ] On the Mac, deploy (README → "Deploy: GitHub Pages") and wait for the workflow to go green. To load your real program and history, follow IPHONE_SETUP.md instead of the demo steps below.
 2. [ ] On the iPhone, open **Safari** and go to `https://becook31415-rgb.github.io/gym-tracker/`.
 3. [ ] The Home screen shows **Sample Block - Upper/Lower** with a Week selector.
 4. [ ] Tap **Share → Add to Home Screen → Add**. A blue barbell icon named **Gym Log** appears.

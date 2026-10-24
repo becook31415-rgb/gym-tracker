@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildSetRows, buildCardioRows, buildExportFiles, mergeBackup, validateBackup, fileStamp, hasUnexported, exportReminderDue, SET_COLUMNS } from '../js/export.js';
+import { buildSetRows, buildCardioRows, buildExportFiles, mergeBackup, validateBackup, checkBackup, fileStamp, hasUnexported, exportReminderDue, SET_COLUMNS } from '../js/export.js';
 import { parseCSV } from '../js/csv.js';
 
 const workout = {
@@ -73,7 +73,58 @@ test('restore merges by session_id without duplicates; newer copy wins', () => {
 
 test('validateBackup rejects other files', () => {
   assert.match(validateBackup({ schema_version: 1, weeks: [] }), /not a workout-log backup/);
-  assert.match(validateBackup({ app: 'gym-tracker', schema_version: 1, sessions: [{ kind: 'workout' }] }), /no session_id/);
+  assert.match(validateBackup({ app: 'gym-tracker', schema_version: 1, sessions: [{ kind: 'workout', date: '2026-01-01', exercises: [] }] }), /"session_id" is missing/);
+});
+
+// Same shape as a hand-made history file: no "app", no "kind", no "updated_at",
+// an exercise-level "unit", load_basis "assist", null reps/weights. Made-up numbers.
+const handMade = () => ({
+  schema_version: 1,
+  exported_at: '2026-10-24T18:30:00',
+  sessions: [{
+    session_id: 's1', date: '2026-09-16', start_time: null, end_time: null, program_name: 'P', week: 1, day_name: 'Day 2', unit: 'kg', session_notes: '',
+    exercises: [
+      { exercise_id: 'negative-pull-up', name_performed: 'Negative pull-up', skipped: false, exercise_note: '', pinned_note: '', load_basis: 'assist', per_side: false, unit: 'lb',
+        sets: [{ set_number: 1, weight: 50, reps: 3, rpe: null, set_note: '', completed: true }, { set_number: 2, weight: 40, reps: null, rpe: null, set_note: '', completed: true }] },
+      { exercise_id: 'glute-raise', name_performed: 'Glute raise', skipped: false, exercise_note: '', pinned_note: '', load_basis: 'added', per_side: false,
+        sets: [{ set_number: 1, weight: null, reps: null, rpe: null, set_note: '', completed: true }] },
+      { exercise_id: 'face-pull', name_performed: 'Face pull', skipped: true, exercise_note: '', pinned_note: '', load_basis: 'total', per_side: false, sets: [] },
+    ],
+  }],
+  cardio_sessions: [],
+});
+
+test('checkBackup accepts a hand-made history file, reports warnings and counts, keeps values', () => {
+  const r = checkBackup(handMade());
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.warnings.length, 3);
+  assert.deepEqual(r.counts, { sessions: 1, cardio: 0, sets: 3 });
+  assert.equal(r.backup.sessions[0].kind, 'workout');
+  assert.equal(r.backup.sessions[0].exercises[0].unit, 'lb');
+  assert.equal(r.backup.sessions[0].exercises[0].sets[1].reps, null);
+  const m = mergeBackup([], [], r.backup);
+  assert.equal(m.added, 1);
+});
+
+test('checkBackup lists every bad value with its location', () => {
+  const h = handMade();
+  h.sessions[0].exercises[0].sets[0].weight = '50';
+  h.sessions[0].exercises[0].unit = 'lbs';
+  h.sessions[0].exercises[1].load_basis = 'each';
+  const r = checkBackup(h);
+  assert.equal(r.backup, null);
+  assert.deepEqual(r.errors, [
+    'Session 1 (2026-09-16, week 1, Day 2), exercise 1 ("Negative pull-up"): "unit" must be "kg" or "lb".',
+    'Session 1 (2026-09-16, week 1, Day 2), exercise 1 ("Negative pull-up"), set 1: "weight" must be a number or null (got "50").',
+    'Session 1 (2026-09-16, week 1, Day 2), exercise 2 ("Glute raise"): "load_basis" "each" is not one of total, per_hand, per_side, added, assist.',
+  ]);
+});
+
+test('set rows use the exercise unit when sets have none', () => {
+  const rows = buildSetRows(checkBackup(handMade()).backup.sessions);
+  assert.equal(rows.length, 3);
+  assert.deepEqual(rows.map((r) => r[8]), ['lb', 'lb', 'kg']);
+  assert.deepEqual(rows.map((r) => r[9]), ['assist', 'assist', 'added']);
 });
 
 test('export reminder only when unexported real data is over 7 days old', () => {

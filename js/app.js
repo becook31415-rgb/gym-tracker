@@ -4,9 +4,10 @@
 import * as db from './db.js';
 import { parseNum, parseIntOrNull, displayNumber, loadBasisLabel, isBodyweightExercise, fmt } from './units.js';
 import { pbFlags } from './pb.js';
-import { lastPerformance, priorSets, prefillSet, formatSets } from './history.js';
+import { lastPerformance, priorSets, prefillSet, formatSets, defaultVariant, lastSetupForName, namesUsed, variantOf,
+  exUnit, setUnit, isFinished, nextUnloggedWeek, kindOf } from './history.js';
 import { parseProgramText } from './program.js';
-import { buildExportFiles, exportReminderDue, hasUnexported, localISO, localDate, validateBackup, mergeBackup } from './export.js';
+import { buildExportFiles, exportReminderDue, hasUnexported, localISO, localDate, checkBackup, mergeBackup } from './export.js';
 import { exportFiles } from './exporter.js';
 
 export const APP_VERSION = '1.0.0';
@@ -88,7 +89,7 @@ app.addEventListener('focusin', (e) => {
 function weekOf(n) { return state.program.weeks.find((w) => w.week === n); }
 
 function sessionFor(week, dayName) {
-  const list = state.sessions.filter((s) => s.kind === 'workout' && s.program_name === state.program.program_name && s.week === week && s.day_name === dayName);
+  const list = state.sessions.filter((s) => kindOf(s) === 'workout' && s.program_name === state.program.program_name && s.week === week && s.day_name === dayName);
   return list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))[0] || null;
 }
 
@@ -105,7 +106,7 @@ function renderHome() {
 
   const days = week.days.map((d, i) => {
     const s = sessionFor(weekNum, d.day_name);
-    const status = s && s.end_time ? '<span class="tick-done" aria-label="completed">✓</span>' : s ? '<span class="in-progress">in progress</span>' : '';
+    const status = s && isFinished(s) ? '<span class="tick-done" aria-label="completed">✓</span>' : s ? '<span class="in-progress">in progress</span>' : '';
     const last = state.settings.lastWeek === weekNum && state.settings.lastDay === d.day_name;
     return `<li><a class="day ${last ? 'last' : ''}" href="#/day/${weekNum}/${i}">
       <span class="day-name">${esc(d.day_name)}</span>
@@ -139,13 +140,21 @@ function renderHome() {
 
 // ---------- Workout ----------
 
-let W = null; // current workout view: { week, dayIdx, day, session, openNotes:Set, openSetNotes:Set }
+let W = null; // current workout view: { week, dayIdx, day, exercises, session, openNotes:Set, openSetNotes:Set }
+
+// The variant (name, load basis, unit) this card is logging: the stored entry's, or a default
+// taken from the last time you did this exercise.
+function variantFor(progEx) {
+  const e = W.session.exercises.find((x) => x.exercise_id === progEx.exercise_id);
+  return e ? variantOf(e, W.session) : defaultVariant(state.sessions, progEx, W.session, state.settings.unit);
+}
 
 function entryFor(progEx, create) {
   let e = W.session.exercises.find((x) => x.exercise_id === progEx.exercise_id);
   if (!e && create) {
-    e = { exercise_id: progEx.exercise_id, name_performed: progEx.name, skipped: false, exercise_note: null, pinned_note: null,
-      load_basis: progEx.load_basis, per_side: progEx.per_side, type: progEx.type, order: progEx.order, sets: [], set_count: null };
+    const v = defaultVariant(state.sessions, progEx, W.session, state.settings.unit);
+    e = { exercise_id: progEx.exercise_id, name_performed: v.name_performed, skipped: false, exercise_note: null, pinned_note: null,
+      load_basis: v.load_basis, unit: v.unit, per_side: progEx.per_side, type: progEx.type, order: progEx.order, sets: [], set_count: null };
     if (progEx.type === 'cardio') e.cardio = null;
     W.session.exercises.push(e);
     W.session.exercises.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
@@ -160,6 +169,18 @@ function saveWorkout() {
   return saveSession(W.session);
 }
 
+// Logged exercises that are not in this program day (e.g. from an older program version)
+// still get a card, so nothing logged is ever hidden.
+function extraExercises(day, session) {
+  const ids = day.exercises.map((e) => e.exercise_id);
+  return session.exercises.filter((e) => !ids.includes(e.exercise_id)).map((e, i) => ({
+    order: 1000 + i, exercise_id: e.exercise_id, name: e.name_performed || e.exercise_id, alternatives: [],
+    type: e.type || (e.load_basis === 'added' ? 'bodyweight' : 'strength'), group: 'NOT IN THIS PROGRAM DAY',
+    sets: e.sets.length || 1, sets_note: null, reps: null, target_weight: null, rpe: null, per_side: !!e.per_side,
+    load_basis: e.load_basis || 'total', prescription_note: null, cues: null, progression: null, notes: null, superset_group: null, cardio: null,
+  }));
+}
+
 function renderWorkout(week, dayIdx) {
   const wk = state.program && weekOf(week);
   const day = wk && wk.days[dayIdx];
@@ -172,10 +193,10 @@ function renderWorkout(week, dayIdx) {
   } else {
     session = structuredClone(session);
   }
-  W = { week, dayIdx, day, session, openNotes: new Set(), openSetNotes: new Set() };
+  W = { week, dayIdx, day, exercises: [...day.exercises, ...extraExercises(day, session)], session, openNotes: new Set(), openSetNotes: new Set() };
 
   let lastGroup = null;
-  const cards = day.exercises.map((ex, i) => {
+  const cards = W.exercises.map((ex, i) => {
     let heading = '';
     if (ex.group && ex.group !== lastGroup) heading = `<h2 class="group">${esc(ex.group)}</h2>`;
     lastGroup = ex.group || lastGroup;
@@ -201,6 +222,7 @@ function finishStatus() {
   const s = W.session;
   if (s.end_time) return `<p class="status done-status">Finished ${esc(timeOf(s.end_time))}. Edits still save automatically.</p>`;
   if (s.start_time) return `<p class="status">Started ${esc(timeOf(s.start_time))} · saved automatically</p>`;
+  if (state.sessions.some((x) => x.session_id === s.session_id)) return '<p class="status done-status">Imported log. Edits save automatically.</p>';
   return '';
 }
 
@@ -224,17 +246,21 @@ function prescription(ex) {
   return t;
 }
 
+const BASIS_NAMES = { total: 'total', per_hand: 'per hand', per_side: 'per side', added: 'added to BW', assist: 'assistance' };
+
 function cardHTML(i) {
-  const ex = W.day.exercises[i];
+  const ex = W.exercises[i];
   const entry = entryFor(ex, false);
   const skipped = !!(entry && entry.skipped);
-  const unit = state.settings.unit;
+  const v = variantFor(ex);
+  const unit = v.unit;
+  const meta = { type: ex.type, load_basis: v.load_basis };
+  const bw = isBodyweightExercise(meta);
   const pins = state.pins.filter((p) => p.exercise_id === ex.exercise_id && p.source_session_id !== W.session.session_id);
-  const lp = lastPerformance(state.sessions, ex.exercise_id, W.session);
-  const lastText = lp.last ? formatSets(lp.last.ex, lp.last.session.unit, unit) : '';
-  const names = [ex.name, ...ex.alternatives];
-  const performed = entry ? entry.name_performed : ex.name;
-  const basisLabel = ex.load_basis !== 'total' || isBodyweightExercise(ex) ? loadBasisLabel(ex.load_basis, unit) : '';
+  const lp = lastPerformance(state.sessions, v, W.session);
+  const lastText = lp.last ? formatSets(lp.last.ex, lp.last.session, unit) : '';
+  const names = [...new Set([ex.name, ...ex.alternatives, ...namesUsed(state.sessions, ex.exercise_id), v.name_performed])];
+  const basisLabel = v.load_basis !== 'total' || bw || unit !== 'kg' ? loadBasisLabel(v.load_basis, unit) : '';
 
   let body = '';
   let anyPb = false;
@@ -246,24 +272,30 @@ function cardHTML(i) {
     const n = rowCount(ex, entry);
     const stored = entry ? entry.sets : [];
     const ordered = Array.from({ length: n }, (_, k) => stored.find((s) => s.set_number === k + 1) || null);
-    const prior = priorSets(state.sessions, ex.exercise_id, ex.load_basis, W.session);
-    const flags = pbFlags(prior, ordered.map((s) => s && { ...s, unit: s.unit || W.session.unit }), { bodyweight: isBodyweightExercise(ex) });
+    const prior = priorSets(state.sessions, v, W.session);
+    const flags = pbFlags(prior, ordered.map((s) => s && { ...s, unit: setUnit(s, entry, W.session) }),
+      { bodyweight: bw, lowerIsBetter: v.load_basis === 'assist' });
     anyPb = flags.some(Boolean);
-    const bw = isBodyweightExercise(ex);
-    const rows = ordered.map((st, k) => setRowHTML(ex, k, st, flags[k], lp, bw)).join('');
-    body = `<div class="set-hdr"><span>Set</span><span>${esc(bw ? `+${unit}` : loadBasisLabel(ex.load_basis, unit))}</span>
+    const rows = ordered.map((st, k) => setRowHTML(ex, entry, k, st, flags[k], lp, bw, unit)).join('');
+    body = `<div class="set-hdr"><span>Set</span><span>${esc(bw ? `+${unit}` : loadBasisLabel(v.load_basis, unit))}</span>
         <span>${ex.per_side ? 'Reps/side' : 'Reps'}</span><span>RPE</span><span></span></div>
       ${rows}
       <button class="btn small add-set" data-act="add-set">+ Add set</button>`;
   }
 
   const ownPin = state.pins.find((p) => p.source_session_id === W.session.session_id && p.exercise_id === ex.exercise_id);
+  const setup = ex.type === 'cardio' ? '' : `<h3>Setup for this exercise</h3>
+      <div class="setup">
+        <label>Unit <select data-field="setup-unit">${['kg', 'lb'].map((u) => `<option ${u === unit ? 'selected' : ''}>${u}</option>`).join('')}</select></label>
+        <label>Weight is <select data-field="setup-basis">${Object.entries(BASIS_NAMES).map(([k, t]) => `<option value="${k}" ${k === v.load_basis ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      </div>
+      <p class="muted small">Pick what the number means on this machine. "Last" and PBs only compare like with like.</p>`;
   return `<section class="ex ${skipped ? 'is-skipped' : ''}" data-ex="${i}" id="ex-${i}">
     <div class="ex-head">
-      <h2 class="ex-name">${esc(performed)}${anyPb ? ' <span class="pb-badge">PB</span>' : ''}</h2>
+      <h2 class="ex-name">${esc(v.name_performed)}${anyPb ? ' <span class="pb-badge">PB</span>' : ''}</h2>
       <button class="btn small skip ${skipped ? 'on' : ''}" data-act="skip" aria-pressed="${skipped}">${skipped ? 'Skipped' : 'Skip'}</button>
     </div>
-    ${names.length > 1 ? `<label class="alt">Doing: <select data-field="alt">${names.map((nm) => `<option ${nm === performed ? 'selected' : ''}>${esc(nm)}</option>`).join('')}</select></label>` : ''}
+    ${names.length > 1 ? `<label class="alt">Doing: <select data-field="alt">${names.map((nm) => `<option ${nm === v.name_performed ? 'selected' : ''}>${esc(nm)}</option>`).join('')}</select></label>` : ''}
     <p class="rx">${esc(prescription(ex))}${basisLabel ? ` · <span class="basis">${esc(basisLabel)}</span>` : ''}${ex.superset_group ? ` · Superset ${esc(ex.superset_group)}` : ''}</p>
     ${ex.prescription_note ? `<p class="rx-note">${esc(ex.prescription_note)}</p>` : ''}
     ${lastText ? `<p class="last">Last: ${esc(lastText)} <span class="muted">(${esc(shortDate(lp.last.session.date))})</span></p>` : ''}
@@ -281,15 +313,15 @@ function cardHTML(i) {
       <h3>Note for this session</h3>
       <textarea rows="2" data-field="ex-note" placeholder="e.g. Bring chalk">${esc(entry && entry.exercise_note)}</textarea>
       <label class="check"><input type="checkbox" data-field="pin-toggle" ${ownPin ? 'checked' : ''}> Pin to this exercise (shows in future sessions)</label>
+      ${setup}
     </details>
   </section>`;
 }
 
-function setRowHTML(ex, k, st, isPb, lp, bw) {
-  const unit = state.settings.unit;
+function setRowHTML(ex, entry, k, st, isPb, lp, bw, unit) {
   let w; let r; let rpe = ''; let note = ''; let prefill = false;
   if (st) {
-    w = fmt(displayNumber(st.weight, st.unit || W.session.unit, unit));
+    w = fmt(displayNumber(st.weight, setUnit(st, entry, W.session), unit));
     r = st.reps ?? '';
     rpe = st.rpe ?? '';
     note = st.set_note || '';
@@ -340,21 +372,23 @@ function rerenderCard(i) {
 }
 
 // Read a set row's current inputs into the stored set (creating it if needed).
+// New or re-typed weights are stored in the unit this exercise is being logged in.
 function syncSet(i, k, changedField) {
-  const ex = W.day.exercises[i];
+  const ex = W.exercises[i];
   const entry = entryFor(ex, true);
+  const unit = exUnit(entry, W.session);
   const row = document.querySelector(`#ex-${i} .set-row[data-set="${k}"]`);
   const val = (f) => row.querySelector(`[data-field="${f}"]`).value;
   let st = entry.sets.find((s) => s.set_number === k + 1);
   if (!st) {
-    st = { set_number: k + 1, weight: parseNum(val('weight')), unit: state.settings.unit, reps: parseIntOrNull(val('reps')),
+    st = { set_number: k + 1, weight: parseNum(val('weight')), unit, reps: parseIntOrNull(val('reps')),
       rpe: parseNum(val('rpe')), set_note: val('set-note').trim() || null, completed: false };
     entry.sets.push(st);
     entry.sets.sort((a, b) => a.set_number - b.set_number);
     if (entry.set_count == null) entry.set_count = rowCount(ex, entry);
   } else if (changedField === 'weight') {
     st.weight = parseNum(val('weight'));
-    st.unit = state.settings.unit;
+    st.unit = unit;
   } else if (changedField === 'reps') st.reps = parseIntOrNull(val('reps'));
   else if (changedField === 'rpe') st.rpe = parseNum(val('rpe'));
   else if (changedField === 'set-note') st.set_note = val('set-note').trim() || null;
@@ -373,7 +407,7 @@ function workoutClick(e) {
   if (btn && btn.id !== 'finish') {
     const card = btn.closest('.ex');
     const i = card ? Number(card.dataset.ex) : null;
-    const ex = i !== null ? W.day.exercises[i] : null;
+    const ex = i !== null ? W.exercises[i] : null;
     const rowEl = btn.closest('.set-row');
     const k = rowEl ? Number(rowEl.dataset.set) : null;
     switch (btn.dataset.act) {
@@ -452,7 +486,7 @@ function workoutInput(e) {
   const f = t.dataset.field;
   if (!f) return;
   const i = Number(t.closest('.ex').dataset.ex);
-  const ex = W.day.exercises[i];
+  const ex = W.exercises[i];
   if (['weight', 'reps', 'rpe', 'set-note'].includes(f)) {
     syncSet(i, Number(t.closest('.set-row').dataset.set), f);
     if (f === 'set-note') t.closest('.set-row').querySelector('.set-num').classList.toggle('has-note', !!t.value.trim());
@@ -481,9 +515,16 @@ function workoutChange(e) {
   const f = t.dataset.field;
   if (!f) return;
   const i = Number(t.closest('.ex').dataset.ex);
-  const ex = W.day.exercises[i];
+  const ex = W.exercises[i];
   const entry = entryFor(ex, true);
-  if (f === 'alt') { entry.name_performed = t.value; saveWorkout(); rerenderCard(i); }
+  if (f === 'alt') {
+    // Switching to an alternative also switches to the setup you last used for it.
+    entry.name_performed = t.value;
+    const setup = lastSetupForName(state.sessions, ex.exercise_id, t.value, W.session);
+    if (setup) { entry.load_basis = setup.load_basis; entry.unit = setup.unit; }
+    saveWorkout(); rerenderCard(i);
+  } else if (f === 'setup-unit') { entry.unit = t.value; saveWorkout(); rerenderCard(i); }
+  else if (f === 'setup-basis') { entry.load_basis = t.value; saveWorkout(); rerenderCard(i); }
   else if (f === 'c-type') { syncCardio(i, entry); saveWorkout(); }
   else if (f === 'pin-toggle') {
     const id = `${W.session.session_id}:${ex.exercise_id}`;
@@ -555,10 +596,10 @@ function doExport(button) {
 let C = null;
 
 function renderCardio(id) {
-  const existing = id && state.sessions.find((s) => s.session_id === id && s.kind === 'cardio');
+  const existing = id && state.sessions.find((s) => s.session_id === id && kindOf(s) === 'cardio');
   C = existing ? structuredClone(existing)
     : { session_id: uuid(), kind: 'cardio', date: localDate(new Date()), start_time: null, cardio_type: 'bike', duration_min: null, intensity_rpe: null, notes: null, updated_at: null };
-  const recent = state.sessions.filter((s) => s.kind === 'cardio').sort((a, b) => (a.start_time < b.start_time ? 1 : -1)).slice(0, 8);
+  const recent = state.sessions.filter((s) => kindOf(s) === 'cardio').sort((a, b) => (a.start_time < b.start_time ? 1 : -1)).slice(0, 8);
   mount(`${header('Cardio')}
     <main class="pad">
       <form class="stack" onsubmit="return false">
@@ -635,7 +676,7 @@ async function renderSettings() {
         <div class="seg" role="group" aria-label="Units">
           ${['kg', 'lb'].map((u) => `<button class="btn ${s.unit === u ? 'on' : ''}" data-unit="${u}" aria-pressed="${s.unit === u}">${u}</button>`).join('')}
         </div>
-        <p class="muted small">Weights are stored in the unit you typed them in. Switching only changes what's shown.</p>
+        <p class="muted small">Default unit for exercises you haven't logged yet. An exercise logged in lb (e.g. an assist machine) stays in lb; change it under that exercise's "Notes &amp; cues → Setup". Stored weights are never converted.</p>
       </section>
 
       <section class="card">
@@ -715,31 +756,46 @@ async function importProgram(text, filename) {
   const days = p.weeks.reduce((n, w) => n + w.days.length, 0);
   if (state.program && !confirm(`Replace "${state.program.program_name}" with "${p.program_name}" (${p.weeks.length} weeks, ${days} days)?\n\nYour logged history is kept.`)) return;
   state.program = p;
-  state.settings.lastWeek = p.weeks[0].week;
-  state.settings.lastDay = null;
   await safely(db.kvSet('program', p));
+  const wk = openNextWeek();
   await saveSettings();
-  out.innerHTML = `<p class="ok-text">Imported "${esc(p.program_name)}": ${p.weeks.length} weeks, ${days} days.</p>`;
+  out.innerHTML = `<p class="ok-text">Imported "${esc(p.program_name)}": ${p.weeks.length} weeks, ${days} days. Home now opens on Week ${wk}.</p>`;
   document.getElementById('prog-paste').value = '';
+}
+
+// Point Home at the next week you haven't logged (Day 1), e.g. Week 7 after weeks 1-6.
+function openNextWeek() {
+  const wk = nextUnloggedWeek(state.program, state.sessions);
+  state.settings.lastWeek = wk;
+  state.settings.lastDay = weekOf(wk).days[0].day_name;
+  return wk;
 }
 
 async function restoreBackup(text) {
   const out = document.getElementById('restore-result');
   let obj;
   try { obj = JSON.parse(text); } catch (e) { out.innerHTML = `<p class="warn-text">Not valid JSON: ${esc(e.message)}</p>`; return; }
-  const err = validateBackup(obj);
-  if (err) { out.innerHTML = `<p class="warn-text">${esc(err)}</p>`; return; }
-  const m = mergeBackup(state.sessions, state.pins, obj);
+  const r = checkBackup(obj);
+  if (r.errors.length) {
+    out.innerHTML = `<div class="errors"><p><strong>Nothing restored.</strong> Problems found:</p><ul>${r.errors.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>`;
+    return;
+  }
+  const m = mergeBackup(state.sessions, state.pins, r.backup);
   await safely(db.putMany('sessions', m.toPut));
   await safely(db.putMany('pins', m.pinsToPut));
   await loadData();
-  out.innerHTML = `<p class="ok-text">Restored: ${m.added} added, ${m.updated} updated, ${m.unchanged} already here.</p>`;
+  const wk = state.program ? openNextWeek() : null;
+  await saveSettings();
+  out.innerHTML = `<p class="ok-text">Restored: ${m.added} added, ${m.updated} updated, ${m.unchanged} already here
+    (file had ${r.counts.sessions} workouts, ${r.counts.cardio} cardio, ${r.counts.sets} sets).${wk ? ` Home now opens on Week ${wk}.` : ''}</p>
+    ${r.warnings.length ? `<ul class="small muted">${r.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}`;
 }
 
 async function loadDemo() {
   try {
-    const h = await (await fetch('data/sample-history.json')).json();
-    const m = mergeBackup(state.sessions, state.pins, h);
+    const h = checkBackup(await (await fetch('data/sample-history.json')).json());
+    if (!h.backup) throw new Error(h.errors[0]);
+    const m = mergeBackup(state.sessions, state.pins, h.backup);
     await db.putMany('sessions', m.toPut);
     await db.putMany('pins', m.pinsToPut);
     await loadData();
