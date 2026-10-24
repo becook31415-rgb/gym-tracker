@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "program_name": "Block N - Name",
+  "start_date": "2026-09-14",
+  "duration_weeks": 8,
+  "units": "kg",
+  "program_notes": [
+    {
+      "title": "How to progress",
+      "body": "Program-wide guidance goes here."
+    }
+  ],
+  "weeks": [
+    {
+      "week": 1,
+      "days": [
+        {
+          "day_name": "Day 1 - Lower",
+          "scheduled_date": "2026-09-14",
+          "exercises": [
+            {
+              "order": 1,
+              "alternatives": [
+                "Safety-bar squat"
+              ],
+              "type": "strength",
+              "group": null,
+              "sets": 4,
+              "sets_note": null,
+              "reps": "3-5",
+              "target_weight": null,
+              "rpe": "8-9",
+              "per_side": false,
+              "load_basis": "total",
+              "prescription_note": null,
+              "cues": "Brace, knees track over toes",
+              "progression": "Add load once all sets hit 5 reps",
+              "notes": null,
+              "superset_group": null,
+              "cardio": null,
+              "exercise_id": "back-squat",
+              "name": "Back squat"
+            },
+            {
+              "order": 2,
+              "alternatives": [],
+              "type": "strength",
+              "group": null,
+              "sets": 3,
+              "sets_note": null,
+              "reps": "8-10",
+              "target_weight": null,
+              "rpe": "7",
+              "per_side": true,
+              "load_basis": "per_hand",
+              "prescription_note": null,
+              "cues": null,
+              "progression": null,
+              "notes": null,
+              "superset_group": null,
+              "cardio": null,
+              "exercise_id": "db-split-squat",
+              "name": "DB split squat"
+            },
+            {
+              "order": 3,
+              "alternatives": [],
+              "type": "bodyweight",
+              "group": null,
+              "sets": 3,
+              "sets_note": null,
+              "reps": "5-8",
+              "target_weight": null,
+              "rpe": "8",
+              "per_side": false,
+              "load_basis": "added",
+              "prescription_note": "Add weight once you get 8 on all sets",
+              "cues": null,
+              "progression": null,
+              "notes": null,
+              "superset_group": null,
+              "cardio": null,
+              "exercise_id": "chin-up",
+              "name": "Chin-up"
+            },
+            {
+              "order": 4,
+              "alternatives": [],
+              "type": "bodyweight",
+              "group": "CORE",
+              "sets": 2,
+              "sets_note": null,
+              "reps": "30s hold",
+              "target_weight": null,
+              "rpe": null,
+              "per_side": false,
+              "load_basis": "added",
+              "prescription_note": null,
+              "cues": null,
+              "progression": null,
+              "notes": null,
+              "superset_group": null,
+              "cardio": null,
+              "exercise_id": "plank",
+              "name": "Plank"
+            },
+            {
+              "order": 5,
+              "alternatives": [],
+              "type": "cardio",
+              "group": null,
+              "sets": null,
+              "sets_note": null,
+              "reps": null,
+              "target_weight": null,
+              "rpe": null,
+              "per_side": false,
+              "load_basis": "total",
+              "prescription_note": null,
+              "cues": null,
+              "progression": null,
+              "notes": null,
+              "superset_group": null,
+              "cardio": {
+                "cardio_type": "bike",
+                "duration_min": 10,
+                "intensity": "RPE 4"
+              },
+              "exercise_id": "bike-cooldown",
+              "name": "Bike cool-down"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

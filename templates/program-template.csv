@@ -1,0 +1,6 @@
+program_name,week,day_name,scheduled_date,order,group,exercise_id,name,alternatives,type,sets,sets_note,reps,rpe,per_side,load_basis,prescription_note,cues,progression,notes
+Block N - Name,1,Day 1 - Lower,2026-09-14,1,,back-squat,Back squat,Safety-bar squat,strength,4,,3-5,8-9,false,total,,"Brace, knees track over toes",Add load once all sets hit 5 reps,
+Block N - Name,1,Day 1 - Lower,2026-09-14,2,,db-split-squat,DB split squat,,strength,3,,8-10,7,true,per_hand,,,,
+Block N - Name,1,Day 1 - Lower,2026-09-14,3,,chin-up,Chin-up,,bodyweight,3,,5-8,8,false,added,Add weight once you get 8 on all sets,,,
+Block N - Name,1,Day 1 - Lower,2026-09-14,4,CORE,plank,Plank,,bodyweight,2,,30s hold,,false,added,,,,
+Block N - Name,1,Day 2 - Upper,2026-09-16,1,,bench-press,Barbell bench press,DB floor press|Machine press,strength,4,,4-6,8,false,total,,,,Bench 2 by the window

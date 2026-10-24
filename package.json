@@ -1,0 +1,10 @@
+{
+  "name": "gym-tracker",
+  "private": true,
+  "type": "module",
+  "description": "Offline gym workout tracker PWA. No dependencies; Node is only used for tests and the local preview server.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "serve": "node tools/serve.mjs"
+  }
+}

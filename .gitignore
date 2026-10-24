@@ -1,0 +1,15 @@
+# Personal data must never be committed: exports, backups and your own programs/logs.
+workout-log_*.json
+workout-sets_*.csv
+workout-cardio_*.csv
+*backup*.json
+exports/
+backups/
+private/
+
+# Tools and OS clutter
+node_modules/
+_site/
+.claude/
+.DS_Store
+*.log

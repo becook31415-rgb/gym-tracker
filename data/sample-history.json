@@ -1,0 +1,1189 @@
+{
+  "schema_version": 1,
+  "app": "gym-tracker",
+  "exported_at": "2026-04-10T19:00:00-04:00",
+  "note": "Made-up demo data. Every record has demo: true.",
+  "sessions": [
+    {
+      "session_id": "demo-w4d1",
+      "kind": "workout",
+      "demo": true,
+      "date": "2026-03-24",
+      "start_time": "2026-03-24T18:05:00-04:00",
+      "end_time": "2026-03-24T19:20:00-04:00",
+      "program_name": "Sample Block - Upper/Lower",
+      "week": 4,
+      "day_name": "Day 1 - Squat + Horizontal Press + Pull",
+      "unit": "kg",
+      "session_notes": null,
+      "exercises": [
+        {
+          "exercise_id": "back-squat",
+          "name_performed": "Back squat",
+          "skipped": false,
+          "exercise_note": "85 felt easy - go up next time",
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 85,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 85,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 85,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 85,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "bench-press",
+          "name_performed": "Barbell bench press",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 70,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 70,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 70,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 72.5,
+              "reps": 5,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "pull-up",
+          "name_performed": "Pull-up",
+          "skipped": false,
+          "exercise_note": "Try a lighter band next time",
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 5,
+              "rpe": null,
+              "set_note": "no band",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 6,
+              "rpe": null,
+              "set_note": "green band",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": null,
+              "reps": 6,
+              "rpe": null,
+              "set_note": "green band",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": null,
+              "reps": 6,
+              "rpe": null,
+              "set_note": "green band",
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "one-arm-cable-row",
+          "name_performed": "One-arm cable row",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": true,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 40,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 42.5,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 42.5,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "standing-calf-raise",
+          "name_performed": "Standing calf raise (single leg)",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "hip-thrust-machine",
+          "name_performed": "Hip thrust machine",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": []
+        },
+        {
+          "exercise_id": "back-extension",
+          "name_performed": "Back extension (Roman chair)",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 40,
+              "rpe": null,
+              "set_note": "hamstrings burning",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 10,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "glute-medius-raise",
+          "name_performed": "Glute medius side-lying raise",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 15,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "single-leg-hip-thrust-hold",
+          "name_performed": "Single-leg hip thrust hold",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": []
+        },
+        {
+          "exercise_id": "snow-angel",
+          "name_performed": "Snow angels",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": []
+        }
+      ],
+      "updated_at": "2026-03-24T19:20:00-04:00"
+    },
+    {
+      "session_id": "demo-w6d1",
+      "kind": "workout",
+      "demo": true,
+      "date": "2026-04-06",
+      "start_time": "2026-04-06T17:50:00-04:00",
+      "end_time": "2026-04-06T19:10:00-04:00",
+      "program_name": "Sample Block - Upper/Lower",
+      "week": 6,
+      "day_name": "Day 1 - Squat + Horizontal Press + Pull",
+      "unit": "kg",
+      "session_notes": "Left wrist a little stiff, kept bench conservative",
+      "exercises": [
+        {
+          "exercise_id": "back-squat",
+          "name_performed": "Back squat",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 100,
+              "reps": 3,
+              "rpe": null,
+              "set_note": "belt",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 100,
+              "reps": 5,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 107.5,
+              "reps": 3,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 100,
+              "reps": 5,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "bench-press",
+          "name_performed": "Barbell bench press",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 75,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 75,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 75,
+              "reps": 4,
+              "rpe": null,
+              "set_note": "narrower grip",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 75,
+              "reps": 4,
+              "rpe": null,
+              "set_note": "narrower grip",
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "pull-up",
+          "name_performed": "Pull-up",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 5,
+              "reps": 4,
+              "rpe": null,
+              "set_note": "dumbbell between feet",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 2.5,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "one-arm-cable-row",
+          "name_performed": "One-arm cable row",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": true,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 50,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 52.5,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 52.5,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "standing-calf-raise",
+          "name_performed": "Standing calf raise (single leg)",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "hip-thrust-machine",
+          "name_performed": "Hip thrust machine",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": []
+        },
+        {
+          "exercise_id": "back-extension",
+          "name_performed": "Back extension (Roman chair)",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 55,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "glute-medius-raise",
+          "name_performed": "Glute medius side-lying raise",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 20,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "single-leg-hip-thrust-hold",
+          "name_performed": "Single-leg hip thrust hold",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "snow-angel",
+          "name_performed": "Snow angels",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": []
+        }
+      ],
+      "updated_at": "2026-04-06T19:10:00-04:00"
+    },
+    {
+      "session_id": "demo-w6d2",
+      "kind": "workout",
+      "demo": true,
+      "date": "2026-04-08",
+      "start_time": "2026-04-08T18:00:00-04:00",
+      "end_time": "2026-04-08T19:15:00-04:00",
+      "program_name": "Sample Block - Upper/Lower",
+      "week": 6,
+      "day_name": "Day 2 - Hinge + Vertical Press + Pull",
+      "unit": "kg",
+      "session_notes": null,
+      "exercises": [
+        {
+          "exercise_id": "deadlift",
+          "name_performed": "Conventional deadlift",
+          "skipped": false,
+          "exercise_note": "Bring long socks",
+          "pinned_note": "Bring long socks for deadlifts",
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 115,
+              "reps": 3,
+              "rpe": null,
+              "set_note": "no straps",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 125,
+              "reps": 3,
+              "rpe": null,
+              "set_note": "no straps",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 127.5,
+              "reps": null,
+              "rpe": null,
+              "set_note": "no straps",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 127.5,
+              "reps": null,
+              "rpe": null,
+              "set_note": "no straps",
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "overhead-press",
+          "name_performed": "Barbell overhead press",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 45,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 47.5,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 50,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 4,
+              "weight": 50,
+              "reps": 4,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "negative-pull-up",
+          "name_performed": "Negative pull-up",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 3,
+              "rpe": null,
+              "set_note": "4 sec eccentric",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": 3,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": null,
+              "reps": 3,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "lat-pulldown",
+          "name_performed": "Neutral-grip lat pulldown",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "per_side",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 60,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 60,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 65,
+              "reps": 6,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "face-pull",
+          "name_performed": "Face pull",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 50,
+              "reps": 12,
+              "rpe": null,
+              "set_note": "straight bar, rope in use",
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 52.5,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "back-extension",
+          "name_performed": "Back extension (Roman chair)",
+          "skipped": true,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": []
+        },
+        {
+          "exercise_id": "glute-medius-raise",
+          "name_performed": "Glute medius side-lying raise",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 20,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "updated_at": "2026-04-08T19:15:00-04:00"
+    },
+    {
+      "session_id": "demo-w6d3",
+      "kind": "workout",
+      "demo": true,
+      "date": "2026-04-10",
+      "start_time": "2026-04-10T17:45:00-04:00",
+      "end_time": "2026-04-10T18:55:00-04:00",
+      "program_name": "Sample Block - Upper/Lower",
+      "week": 6,
+      "day_name": "Day 3 - Secondary Lower + Press + Pull + Core",
+      "unit": "kg",
+      "session_notes": null,
+      "exercises": [
+        {
+          "exercise_id": "split-squat",
+          "name_performed": "Walking lunge",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "per_hand",
+          "per_side": true,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 18,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 20,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 20,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "incline-db-press",
+          "name_performed": "Incline DB press",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "per_hand",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 28,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 30,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 30,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "pull-up",
+          "name_performed": "Pull-up",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": null,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": null,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "chest-supported-row",
+          "name_performed": "Chest-supported DB row",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "per_hand",
+          "per_side": false,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 20,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 22,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 3,
+              "weight": 22,
+              "reps": 8,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "pallof-press",
+          "name_performed": "Pallof press",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": true,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 30,
+              "reps": 10,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            },
+            {
+              "set_number": 2,
+              "weight": 30,
+              "reps": 10,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "hanging-leg-raise",
+          "name_performed": "Hanging leg raise",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": false,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": 10,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "cable-external-rotation",
+          "name_performed": "Rotator cuff cable external rotation",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "total",
+          "per_side": true,
+          "type": "strength",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": 8,
+              "reps": 12,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        },
+        {
+          "exercise_id": "glute-medius-raise",
+          "name_performed": "Glute medius side-lying raise",
+          "skipped": false,
+          "exercise_note": null,
+          "pinned_note": null,
+          "load_basis": "added",
+          "per_side": true,
+          "type": "bodyweight",
+          "sets": [
+            {
+              "set_number": 1,
+              "weight": null,
+              "reps": null,
+              "rpe": null,
+              "set_note": null,
+              "completed": true,
+              "unit": "kg"
+            }
+          ]
+        }
+      ],
+      "updated_at": "2026-04-10T18:55:00-04:00"
+    }
+  ],
+  "cardio_sessions": [
+    {
+      "session_id": "demo-c1",
+      "kind": "cardio",
+      "demo": true,
+      "date": "2026-04-07",
+      "start_time": "2026-04-07T07:10:00-04:00",
+      "cardio_type": "bike",
+      "duration_min": 25,
+      "intensity_rpe": 5,
+      "notes": "Easy spin",
+      "updated_at": "2026-04-07T07:40:00-04:00"
+    },
+    {
+      "session_id": "demo-c2",
+      "kind": "cardio",
+      "demo": true,
+      "date": "2026-04-09",
+      "start_time": "2026-04-09T07:05:00-04:00",
+      "cardio_type": "run",
+      "duration_min": 30,
+      "intensity_rpe": 6,
+      "notes": "Park loop",
+      "updated_at": "2026-04-09T07:40:00-04:00"
+    }
+  ],
+  "pinned_notes": [
+    {
+      "id": "demo-pin-1",
+      "exercise_id": "deadlift",
+      "text": "Bring long socks for deadlifts",
+      "source_session_id": "demo-w6d2",
+      "demo": true,
+      "created_at": "2026-04-08T19:15:00-04:00",
+      "updated_at": "2026-04-08T19:15:00-04:00"
+    }
+  ]
+}
