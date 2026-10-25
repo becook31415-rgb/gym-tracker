@@ -202,3 +202,76 @@ details.notes p { margin: 2px 0 6px; }
 }
 .setup { display: flex; gap: 8px; }
 .setup label { flex: 1; font-size: 16px; color: var(--muted); }
+
+/* ---------- Home screen: native iOS look ---------- */
+:root {
+  --ios-bg: #f2f2f7;
+  --ios-card: #ffffff;
+  --ios-text: #000000;
+  --ios-secondary: #636366;
+  --ios-accent: #0066cc;
+  --ios-on-accent: #ffffff;
+  --ios-track: #e5e5ea;
+  --ios-tint: rgba(0, 102, 204, 0.12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ios-bg: #000000;
+    --ios-card: #1c1c1e;
+    --ios-text: #ffffff;
+    --ios-secondary: #aeaeb2;
+    --ios-accent: #5aa9ff;
+    --ios-on-accent: #000000;
+    --ios-track: #38383a;
+    --ios-tint: rgba(90, 169, 255, 0.18);
+  }
+}
+body.ios { background: var(--ios-bg); color: var(--ios-text); font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+.ios p { margin: 0; }
+.ios-toolbar {
+  display: flex; align-items: center; gap: 4px;
+  padding: calc(env(safe-area-inset-top) + 4px) 8px 0 16px;
+}
+.ios-toolbar .spacer { flex: 1; }
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 22px;
+  background: transparent; color: var(--ios-accent); text-decoration: none; cursor: pointer;
+}
+.icon-btn:disabled { color: var(--ios-secondary); opacity: 0.35; cursor: default; }
+.ios-home { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 32px; }
+.large-title { font-size: 34px; font-weight: 700; line-height: 1.15; letter-spacing: 0.2px; margin: 4px 0 0; }
+.ios .subtitle { margin-top: -8px; }
+.ios .card-title { font-size: 17px; font-weight: 600; line-height: 1.3; }
+.ios .meta { font-size: 15px; font-weight: 400; line-height: 1.35; color: var(--ios-secondary); }
+.ios .caps { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: var(--ios-secondary); }
+.ios .caps.accent { color: var(--ios-accent); }
+.ios .section-label { margin: 8px 0 -4px 4px; }
+.ios-card {
+  display: block; background: var(--ios-card); color: var(--ios-text);
+  border-radius: 14px; padding: 14px 16px; text-decoration: none;
+}
+.week-card { padding: 8px 8px 14px; }
+.week-nav { display: flex; align-items: center; justify-content: space-between; }
+.week-nav .prev svg { transform: rotate(180deg); }
+.week-center { text-align: center; }
+.week-range { font-size: 13px; color: var(--ios-secondary); margin-top: 2px; }
+.progress { height: 4px; border-radius: 2px; background: var(--ios-track); margin: 10px 8px 0; overflow: hidden; }
+.progress span { display: block; height: 100%; border-radius: 2px; background: var(--ios-accent); }
+.session { min-height: 44px; }
+.session-row { display: flex; align-items: center; gap: 12px; }
+.session-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.session .trail { color: var(--ios-secondary); display: inline-flex; flex: none; }
+.session .trail.check { color: var(--ios-text); }
+.session.done .card-title { color: var(--ios-secondary); }
+.start-btn {
+  display: flex; align-items: center; justify-content: center;
+  height: 50px; margin-top: 14px; border-radius: 12px;
+  background: var(--ios-accent); color: var(--ios-on-accent); font-size: 17px; font-weight: 600;
+}
+.plus-circle {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 36px; height: 36px; border-radius: 50%; background: var(--ios-tint); color: var(--ios-accent);
+}
+.ios .offline { font-size: 13px; }
+.ios-card:active, .icon-btn:active:not(:disabled) { opacity: 0.6; }

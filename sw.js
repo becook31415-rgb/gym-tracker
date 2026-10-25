@@ -19,6 +19,7 @@ const FILES = [
   'js/csv.js',
   'js/export.js',
   'js/exporter.js',
+  'js/display.js',
   'data/sample-program.json',
   'data/sample-history.json',
   'templates/program-template.json',

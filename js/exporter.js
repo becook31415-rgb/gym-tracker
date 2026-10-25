@@ -9,7 +9,8 @@ class ShareExporter {
   constructor(fileObjs) { this.fileObjs = fileObjs; }
   async export() {
     try {
-      await navigator.share({ files: this.fileObjs, title: 'Workout export' });
+      // No title/text: iOS "Save to Files" would save it as an extra .txt file.
+      await navigator.share({ files: this.fileObjs });
       return 'shared';
     } catch (e) {
       if (e && e.name === 'AbortError') return 'cancelled';

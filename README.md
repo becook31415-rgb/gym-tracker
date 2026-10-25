@@ -407,6 +407,7 @@ css/app.css              20px base, light/dark, 44px+ targets
 js/app.js                screens, routing, autosave            (browser)
 js/db.js                 IndexedDB wrapper                      (browser)
 js/exporter.js           share sheet / download exporter        (browser)
+js/display.js            Home titles, date labels, week ranges  (pure, tested)
 js/units.js              kg/lb, load-basis labels               (pure, tested)
 js/pb.js                 personal-best rules                    (pure, tested)
 js/history.js            last time, pre-fill, prior sets        (pure, tested)

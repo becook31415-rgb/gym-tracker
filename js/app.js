@@ -9,6 +9,7 @@ import { lastPerformance, priorSets, prefillSet, formatSets, defaultVariant, las
 import { parseProgramText } from './program.js';
 import { buildExportFiles, exportReminderDue, hasUnexported, localISO, localDate, checkBackup, mergeBackup } from './export.js';
 import { exportFiles } from './exporter.js';
+import { splitProgramName, weekCount, weekRangeLabel, weekForDate, sessionTitle, dateLabel } from './display.js';
 
 export const APP_VERSION = '1.0.0';
 export const BUILD = 'dev'; // replaced with the commit id by the deploy workflow
@@ -70,6 +71,7 @@ function header(title, back = true) {
 }
 
 function mount(html, handlers = {}) {
+  document.body.classList.remove('ios'); // Home adds it back after mounting
   app.innerHTML = html;
   screen = handlers;
   window.scrollTo(0, 0);
@@ -93,6 +95,21 @@ function sessionFor(week, dayName) {
   return list.sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))[0] || null;
 }
 
+const ICON_NOTES = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICON_SLIDERS = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+const ICON_CHEVRON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_PLUS = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+
+let homeWeek = null; // week being viewed on Home this visit; null = pick the default
+
+// Default: the week containing today; outside the program's dates, the last week you used.
+function defaultHomeWeek() {
+  const today = weekForDate(state.program, new Date());
+  if (today !== null) return today;
+  return weekOf(state.settings.lastWeek) ? state.settings.lastWeek : state.program.weeks[0].week;
+}
+
 function renderHome() {
   if (!state.program) {
     mount(`${header('Gym Tracker', false)}<main class="pad"><p>No program loaded yet.</p>
@@ -100,42 +117,84 @@ function renderHome() {
     return;
   }
   const p = state.program;
-  const weekNum = weekOf(state.settings.lastWeek) ? state.settings.lastWeek : p.weeks[0].week;
+  if (!weekOf(homeWeek)) homeWeek = defaultHomeWeek();
+  const weekNum = homeWeek;
   const week = weekOf(weekNum);
+  const idx = p.weeks.indexOf(week);
+  const total = weekCount(p);
+  const { title, subtitle } = splitProgramName(p);
+  const range = weekRangeLabel(p, weekNum);
   const reminder = exportReminderDue(state.sessions, state.settings.lastExportAt, new Date());
 
-  const days = week.days.map((d, i) => {
-    const s = sessionFor(weekNum, d.day_name);
-    const status = s && isFinished(s) ? '<span class="tick-done" aria-label="completed">✓</span>' : s ? '<span class="in-progress">in progress</span>' : '';
-    const last = state.settings.lastWeek === weekNum && state.settings.lastDay === d.day_name;
-    return `<li><a class="day ${last ? 'last' : ''}" href="#/day/${weekNum}/${i}">
-      <span class="day-name">${esc(d.day_name)}</span>
-      <span class="day-meta">${d.scheduled_date ? esc(shortDate(d.scheduled_date)) : ''} ${status}</span></a></li>`;
+  const sessions = week.days.map((d) => sessionFor(weekNum, d.day_name));
+  const upNext = sessions.findIndex((s) => !(s && isFinished(s)));
+
+  const cards = week.days.map((d, i) => {
+    const s = sessions[i];
+    const done = !!(s && isFinished(s));
+    const started = !!s && !done;
+    const { title: focus, dayLabel } = sessionTitle(d.day_name, i);
+    const label = dateLabel(d.scheduled_date) || dayLabel;
+    const isNext = i === upNext;
+    return `<a class="ios-card session ${done ? 'done' : ''} ${isNext ? 'next' : ''}" href="#/day/${weekNum}/${i}">
+      <div class="session-row">
+        <div class="session-text">
+          <p class="caps ${isNext ? 'accent' : ''}">${isNext ? 'Up next · ' : ''}${esc(label)}</p>
+          <p class="card-title">${esc(focus)}</p>
+          <p class="meta">${esc(dayLabel)}${started ? ' · in progress' : ''}${done ? ' · completed' : ''}</p>
+        </div>
+        ${isNext ? '' : `<span class="trail ${done ? 'check' : ''}">${done ? ICON_CHECK : ICON_CHEVRON}</span>`}
+      </div>
+      ${isNext ? `<span class="start-btn">${started ? 'Continue session' : 'Start session'}</span>` : ''}
+    </a>`;
   }).join('');
 
-  mount(`${header('Gym Tracker', false)}
-    <main class="pad">
-      ${reminder ? '<a class="banner warn" href="#/settings">You have workouts not exported for over 7 days. Tap to export.</a>' : ''}
-      <p class="program-name">${esc(p.program_name)}</p>
-      <label class="week-select">Week
-        <select id="week">${p.weeks.map((w) => `<option value="${w.week}" ${w.week === weekNum ? 'selected' : ''}>Week ${w.week}</option>`).join('')}</select>
-      </label>
-      <ul class="days">${days}</ul>
-      <nav class="home-actions">
-        <a class="btn" href="#/cardio">Cardio session</a>
-        <a class="btn" href="#/notes">Program notes</a>
-        <a class="btn" href="#/settings">Settings / Export</a>
-      </nav>
+  mount(`<div class="ios-toolbar">
+      <span class="offline" ${navigator.onLine ? 'hidden' : ''}>Offline</span>
+      <span class="spacer"></span>
+      <a class="icon-btn" href="#/notes" aria-label="Program notes">${ICON_NOTES}</a>
+      <a class="icon-btn" href="#/settings" aria-label="Settings and export">${ICON_SLIDERS}</a>
+    </div>
+    <main class="ios-home">
+      <h1 class="large-title">${esc(title)}</h1>
+      ${subtitle ? `<p class="meta subtitle">${esc(subtitle)}</p>` : ''}
+      ${reminder ? `<a class="ios-card reminder" href="#/settings"><p class="caps">Backup</p>
+        <p class="card-title">Export your workouts</p><p class="meta">Not exported for over 7 days. Tap to export.</p></a>` : ''}
+      <section class="ios-card week-card" aria-label="Week">
+        <div class="week-nav">
+          <button class="icon-btn chev prev" data-step="-1" aria-label="Previous week" ${idx === 0 ? 'disabled' : ''}>${ICON_CHEVRON}</button>
+          <div class="week-center">
+            <p class="card-title">Week ${weekNum} of ${total}</p>
+            ${range ? `<p class="week-range">${esc(range)}</p>` : ''}
+          </div>
+          <button class="icon-btn chev" data-step="1" aria-label="Next week" ${idx === p.weeks.length - 1 ? 'disabled' : ''}>${ICON_CHEVRON}</button>
+        </div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${weekNum}" aria-label="Week ${weekNum} of ${total}">
+          <span style="width:${Math.min(100, (weekNum / total) * 100).toFixed(1)}%"></span>
+        </div>
+      </section>
+      <p class="caps section-label">This week</p>
+      ${cards}
+      <a class="ios-card session cardio-card" href="#/cardio">
+        <div class="session-row">
+          <div class="session-text">
+            <p class="caps">Any day</p>
+            <p class="card-title">Log cardio</p>
+          </div>
+          <span class="plus-circle">${ICON_PLUS}</span>
+        </div>
+      </a>
     </main>`, {
-    change(e) {
-      if (e.target.id === 'week') {
-        state.settings.lastWeek = Number(e.target.value);
-        state.settings.lastDay = null;
-        saveSettings();
-        renderHome();
-      }
+    click(e) {
+      const b = e.target.closest('button[data-step]');
+      if (!b || b.disabled) return;
+      homeWeek = p.weeks[idx + Number(b.dataset.step)].week;
+      state.settings.lastWeek = homeWeek;
+      saveSettings();
+      renderHome();
     },
   });
+  document.body.classList.add('ios');
 }
 
 // ---------- Workout ----------
@@ -765,6 +824,7 @@ async function importProgram(text, filename) {
 
 // Point Home at the next week you haven't logged (Day 1), e.g. Week 7 after weeks 1-6.
 function openNextWeek() {
+  homeWeek = null;
   const wk = nextUnloggedWeek(state.program, state.sessions);
   state.settings.lastWeek = wk;
   state.settings.lastDay = weekOf(wk).days[0].day_name;

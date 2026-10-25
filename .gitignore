@@ -6,9 +6,11 @@ private/
 exports/
 backups/
 
-# Every JSON and CSV file is ignored by default (exports, backups, programs, logs)...
+# Every JSON, CSV and TXT file is ignored by default (exports, backups, programs, logs,
+# and the .txt files iOS can save alongside exports)...
 *.json
 *.csv
+*.txt
 # ...except these known, made-up or code files:
 !/package.json
 !/data/sample-program.json
