@@ -12,7 +12,7 @@ Tick each line as you go. If something fails, note the step number and what you 
 
 ## B. Program and demo data
 
-6. [ ] **Settings / Export → Import program → Choose file**. Pick `sample-program.json` (download it from the repo to Files first), or paste its contents. You should see "Imported … 3 weeks, 7 days".
+6. [ ] **Sliders icon (Settings) → Import program → Import a program file (.json or .csv)**. Pick `sample-program.json` (download it from the repo to Files first), or paste its contents. You should see "Imported … 3 weeks, 7 days".
 7. [ ] Paste `{ "schema_version": 1 }` and tap **Import pasted text**. A clear error list appears, and the current program is unchanged.
 8. [ ] **Load demo data**. A toast says "Demo data loaded (6 sessions)".
 9. [ ] Home → Week 6: all three days show a green ✓.

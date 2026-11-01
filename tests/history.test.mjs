@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { topOfRange, lastPerformance, prefillSet, formatSets, priorSets, defaultVariant, lastSetupForName,
-  namesUsed, variantOf, isFinished, nextUnloggedWeek, kindOf, setUnit } from '../js/history.js';
+  namesUsed, variantOf, isFinished, nextUnloggedWeek, kindOf, setUnit, lastNotes } from '../js/history.js';
 
 const set = (n, weight, reps, extra = {}) => ({ set_number: n, weight, reps, rpe: null, set_note: null, completed: true, ...extra });
 const session = (id, date, exercises, extra = {}) => ({ session_id: id, kind: 'workout', date, start_time: `${date}T18:00:00-04:00`, unit: 'kg', exercises, ...extra });
@@ -128,4 +128,21 @@ test('nextUnloggedWeek: the week after the latest logged week, gaps ignored', ()
   assert.equal(nextUnloggedWeek(program, []), 1);
   assert.equal(nextUnloggedWeek(program, [{ program_name: 'Other', week: 6 }]), 1);
   assert.equal(nextUnloggedWeek(program, [{ program_name: 'P', week: 8 }]), 8);
+});
+
+test('lastNotes: note and set notes from the previous session only', () => {
+  const pallof = (sets, extra = {}) => ({ exercise_id: 'pallof-press', name_performed: 'Pallof press', load_basis: 'total', sets, ...extra });
+  const s = [
+    session('a', '2026-10-02', [pallof([set(1, 20, 10)], { exercise_note: 'Cable by the lockers' })]),
+    session('b', '2026-10-09', [pallof([set(1, 18, 10, { set_note: 'heavy' }), set(2, 18, 10)], { exercise_note: 'by the rowers ' })]),
+    session('c', '2026-10-16', [pallof([], { skipped: true, exercise_note: 'skipped today' })]),
+  ];
+  const now = session('z', '2026-10-23', []);
+  assert.deepEqual(lastNotes(s, 'pallof-press', now), { date: '2026-10-09', note: 'by the rowers', setNotes: [{ set_number: 1, note: 'heavy' }] });
+  // the previous session had no notes: nothing shown, never an older note
+  const s2 = [...s, session('d', '2026-10-20', [pallof([set(1, 18, 10)])])];
+  assert.equal(lastNotes(s2, 'pallof-press', now), null);
+  assert.equal(lastNotes(s, 'face-pull', now), null);
+  // only sessions before the one being viewed
+  assert.equal(lastNotes(s, 'pallof-press', session('y', '2026-10-05', [])).note, 'Cable by the lockers');
 });

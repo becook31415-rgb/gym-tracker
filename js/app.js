@@ -5,7 +5,7 @@ import * as db from './db.js';
 import { parseNum, parseIntOrNull, displayNumber, loadBasisLabel, isBodyweightExercise, fmt } from './units.js';
 import { pbFlags } from './pb.js';
 import { lastPerformance, priorSets, prefillSet, formatSets, defaultVariant, lastSetupForName, namesUsed, variantOf,
-  exUnit, setUnit, isFinished, nextUnloggedWeek, kindOf } from './history.js';
+  exUnit, setUnit, isFinished, nextUnloggedWeek, kindOf, lastNotes, sortSessions } from './history.js';
 import { parseProgramText } from './program.js';
 import { buildExportFiles, exportReminderDue, hasUnexported, localISO, localDate, checkBackup, mergeBackup } from './export.js';
 import { exportFiles } from './exporter.js';
@@ -228,16 +228,107 @@ function saveWorkout() {
   return saveSession(W.session);
 }
 
-// Logged exercises that are not in this program day (e.g. from an older program version)
-// still get a card, so nothing logged is ever hidden.
+// The latest prescription of an exercise anywhere in the program (for cues/notes), or null.
+function programExercise(exerciseId) {
+  for (const w of [...state.program.weeks].reverse()) {
+    for (const d of w.days) {
+      const e = d.exercises.find((x) => x.exercise_id === exerciseId);
+      if (e) return e;
+    }
+  }
+  return null;
+}
+
+// Exercises in this session that are not in the program day: ones you added at the end
+// ("ADDED EXERCISES"), or logs from an older program version. Every logged exercise gets a card.
 function extraExercises(day, session) {
   const ids = day.exercises.map((e) => e.exercise_id);
-  return session.exercises.filter((e) => !ids.includes(e.exercise_id)).map((e, i) => ({
-    order: 1000 + i, exercise_id: e.exercise_id, name: e.name_performed || e.exercise_id, alternatives: [],
-    type: e.type || (e.load_basis === 'added' ? 'bodyweight' : 'strength'), group: 'NOT IN THIS PROGRAM DAY',
-    sets: e.sets.length || 1, sets_note: null, reps: null, target_weight: null, rpe: null, per_side: !!e.per_side,
-    load_basis: e.load_basis || 'total', prescription_note: null, cues: null, progression: null, notes: null, superset_group: null, cardio: null,
-  }));
+  return session.exercises.filter((e) => !ids.includes(e.exercise_id)).map((e, i) => {
+    const pe = programExercise(e.exercise_id);
+    return {
+      order: 1000 + i, exercise_id: e.exercise_id, name: e.name_performed || e.exercise_id, alternatives: [],
+      type: e.type || (pe && pe.type) || (e.load_basis === 'added' ? 'bodyweight' : 'strength'),
+      group: e.added ? 'ADDED EXERCISES' : 'NOT IN THIS PROGRAM DAY', added: !!e.added,
+      sets: e.set_count ?? (e.sets.length || 1), sets_note: null, reps: null, target_weight: null, rpe: null, per_side: !!e.per_side,
+      load_basis: e.load_basis || 'total', prescription_note: null, cues: pe ? pe.cues : null,
+      progression: pe ? pe.progression : null, notes: pe ? pe.notes : null, superset_group: null, cardio: null,
+    };
+  });
+}
+
+// What can be added at the end of a workout: program exercises and exercises from your
+// history that are not already in this session, alphabetical.
+function addableExercises() {
+  const inSession = new Set(W.exercises.map((e) => e.exercise_id));
+  const found = new Map();
+  for (const w of state.program.weeks) for (const d of w.days) for (const e of d.exercises) {
+    if (!inSession.has(e.exercise_id) && e.type !== 'cardio') found.set(e.exercise_id, e.name);
+  }
+  for (const s of sortSessions(state.sessions)) for (const e of s.exercises || []) {
+    if (!inSession.has(e.exercise_id) && !found.has(e.exercise_id) && e.name_performed) found.set(e.exercise_id, e.name_performed);
+  }
+  return [...found.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+}
+
+const slug = (name) => name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+function addExerciseHTML() {
+  return `<details class="card add-ex" id="add-ex">
+    <summary>+ Add exercise</summary>
+    <label>Exercise <select id="add-ex-pick">
+      <option value="">Choose…</option>
+      ${addableExercises().map(([id, name]) => `<option value="${esc(id)}">${esc(name)}</option>`).join('')}
+      <option value="__new">New exercise (type a name)…</option>
+    </select></label>
+    <label id="add-ex-name-wrap" hidden>Name <input id="add-ex-name" autocomplete="off" placeholder="e.g. Goblet squat"></label>
+    <button class="btn primary" id="add-ex-go">Add to this workout</button>
+  </details>`;
+}
+
+function addExercise() {
+  const pick = document.getElementById('add-ex-pick').value;
+  let id; let entry;
+  const base = { skipped: false, exercise_note: null, pinned_note: null, added: true, order: 1000 + W.session.exercises.length };
+  if (pick === '__new') {
+    const name = document.getElementById('add-ex-name').value.trim();
+    id = slug(name);
+    if (!id) { toast('Type a name for the new exercise.'); return; }
+    const known = addableExercises().find(([kid]) => kid === id);
+    if (!known && !W.exercises.some((e) => e.exercise_id === id)) {
+      entry = { exercise_id: id, name_performed: name, load_basis: 'total', unit: state.settings.unit, per_side: false, type: 'strength', sets: [], set_count: 3 };
+    }
+  } else if (pick) {
+    id = pick;
+  } else {
+    toast('Choose an exercise first.'); return;
+  }
+  if (W.exercises.some((e) => e.exercise_id === id)) { toast('That exercise is already in this workout.'); return; }
+  if (!entry) {
+    const pe = programExercise(id);
+    const lastS = [...sortSessions(state.sessions)].reverse().find((s) => (s.exercises || []).some((e) => e.exercise_id === id && !e.skipped));
+    const lastE = lastS && lastS.exercises.find((e) => e.exercise_id === id);
+    const like = pe || { exercise_id: id, name: lastE.name_performed, load_basis: lastE.load_basis || 'total' };
+    const v = defaultVariant(state.sessions, like, W.session, state.settings.unit);
+    entry = { exercise_id: id, name_performed: v.name_performed, load_basis: v.load_basis, unit: v.unit,
+      per_side: pe ? pe.per_side : !!(lastE && lastE.per_side), type: pe ? pe.type : (lastE && lastE.type) || 'strength',
+      sets: [], set_count: (pe && pe.sets) || (lastE && lastE.sets.length) || 3 };
+  }
+  W.session.exercises.push({ ...base, ...entry });
+  saveWorkout();
+  renderWorkout(W.week, W.dayIdx);
+  const i = W.exercises.findIndex((e) => e.exercise_id === id);
+  const el = document.getElementById(`ex-${i}`);
+  if (el) el.scrollIntoView({ block: 'start' });
+  toast('Exercise added.');
+}
+
+function removeAddedExercise(i) {
+  const ex = W.exercises[i];
+  const entry = entryFor(ex, false);
+  if (entry && entry.sets.some((s) => s.completed) && !confirm(`Remove ${entry.name_performed} and its logged sets from this workout?`)) return;
+  W.session.exercises = W.session.exercises.filter((e) => e.exercise_id !== ex.exercise_id);
+  saveWorkout();
+  renderWorkout(W.week, W.dayIdx);
 }
 
 function renderWorkout(week, dayIdx) {
@@ -268,6 +359,7 @@ function renderWorkout(week, dayIdx) {
       <label class="inline">Date <input type="date" id="session-date" value="${esc(session.date)}"></label>
       <div id="finish-status">${finishStatus()}</div>
       ${cards}
+      ${addExerciseHTML()}
       <section class="session-notes">
         <label for="session-notes">Session notes</label>
         <textarea id="session-notes" rows="3" placeholder="How did it go?">${esc(session.session_notes)}</textarea>
@@ -318,6 +410,8 @@ function cardHTML(i) {
   const pins = state.pins.filter((p) => p.exercise_id === ex.exercise_id && p.source_session_id !== W.session.session_id);
   const lp = lastPerformance(state.sessions, v, W.session);
   const lastText = lp.last ? formatSets(lp.last.ex, lp.last.session, unit) : '';
+  const ln = lastNotes(state.sessions, ex.exercise_id, W.session);
+  const lnText = ln ? [ln.note, ln.setNotes.length ? `Set notes: ${ln.setNotes.map((x) => `${x.set_number} ${x.note}`).join(' · ')}` : null].filter(Boolean).join('. ') : '';
   const names = [...new Set([ex.name, ...ex.alternatives, ...namesUsed(state.sessions, ex.exercise_id), v.name_performed])];
   const basisLabel = v.load_basis !== 'total' || bw || unit !== 'kg' ? loadBasisLabel(v.load_basis, unit) : '';
 
@@ -352,13 +446,15 @@ function cardHTML(i) {
   return `<section class="ex ${skipped ? 'is-skipped' : ''}" data-ex="${i}" id="ex-${i}">
     <div class="ex-head">
       <h2 class="ex-name">${esc(v.name_performed)}${anyPb ? ' <span class="pb-badge">PB</span>' : ''}</h2>
-      <button class="btn small skip ${skipped ? 'on' : ''}" data-act="skip" aria-pressed="${skipped}">${skipped ? 'Skipped' : 'Skip'}</button>
+      ${ex.added ? '<button class="btn small danger" data-act="remove-ex">Remove</button>'
+        : `<button class="btn small skip ${skipped ? 'on' : ''}" data-act="skip" aria-pressed="${skipped}">${skipped ? 'Skipped' : 'Skip'}</button>`}
     </div>
     ${names.length > 1 ? `<label class="alt">Doing: <select data-field="alt">${names.map((nm) => `<option ${nm === v.name_performed ? 'selected' : ''}>${esc(nm)}</option>`).join('')}</select></label>` : ''}
-    <p class="rx">${esc(prescription(ex))}${basisLabel ? ` · <span class="basis">${esc(basisLabel)}</span>` : ''}${ex.superset_group ? ` · Superset ${esc(ex.superset_group)}` : ''}</p>
+    <p class="rx">${esc(ex.added ? 'Added to this workout' : prescription(ex))}${basisLabel ? ` · <span class="basis">${esc(basisLabel)}</span>` : ''}${ex.superset_group ? ` · Superset ${esc(ex.superset_group)}` : ''}</p>
     ${ex.prescription_note ? `<p class="rx-note">${esc(ex.prescription_note)}</p>` : ''}
     ${lastText ? `<p class="last">Last: ${esc(lastText)} <span class="muted">(${esc(shortDate(lp.last.session.date))})</span></p>` : ''}
     ${lp.skippedLastTime ? `<p class="last muted">Skipped last time (${esc(shortDate(lp.skippedDate))})</p>` : ''}
+    ${ln ? `<p class="last-note">📝 Last time's note (${esc(shortDate(ln.date))}): ${esc(lnText)}</p>` : ''}
     ${pins.map((p) => `<p class="pin">📌 ${esc(p.text)}</p>`).join('')}
     ${body}
     <details class="notes" ${W.openNotes.has(i) ? 'open' : ''} data-act="notes">
@@ -369,8 +465,9 @@ function cardHTML(i) {
       ${pins.length ? `<h3>Pinned reminders</h3>${pins.map((p) => `<div class="pin-edit">
           <textarea rows="2" data-field="pin" data-pin="${esc(p.id)}">${esc(p.text)}</textarea>
           <button class="btn small" data-act="unpin" data-pin="${esc(p.id)}">Remove</button></div>`).join('')}` : ''}
+      ${ln ? `<h3>Last time's note (${esc(shortDate(ln.date))})</h3><p>${esc(lnText)}</p>` : ''}
       <h3>Note for this session</h3>
-      <textarea rows="2" data-field="ex-note" placeholder="e.g. Bring chalk">${esc(entry && entry.exercise_note)}</textarea>
+      <textarea rows="2" data-field="ex-note" placeholder="e.g. Used the cable by the rowers">${esc(entry && entry.exercise_note)}</textarea>
       <label class="check"><input type="checkbox" data-field="pin-toggle" ${ownPin ? 'checked' : ''}> Pin to this exercise (shows in future sessions)</label>
       ${setup}
     </details>
@@ -456,7 +553,7 @@ function syncSet(i, k, changedField) {
 }
 
 function workoutClick(e) {
-  if (e.target.closest('summary')) {
+  if (e.target.closest('summary') && e.target.closest('.ex')) {
     const i = Number(e.target.closest('.ex').dataset.ex);
     // toggle state is read after the browser flips it
     setTimeout(() => { const d = document.querySelector(`#ex-${i} details`); if (d && d.open) W.openNotes.add(i); else W.openNotes.delete(i); });
@@ -502,6 +599,10 @@ function workoutClick(e) {
         rerenderCard(i);
         break;
       }
+      case 'remove-ex': {
+        removeAddedExercise(i);
+        break;
+      }
       case 'skip': {
         const entry = entryFor(ex, true);
         entry.skipped = !entry.skipped;
@@ -527,6 +628,7 @@ function workoutClick(e) {
     return;
   }
   if (e.target.id === 'finish') finishWorkout();
+  if (e.target.id === 'add-ex-go') addExercise();
   if (e.target.id === 'export-now') doExport(e.target);
   if (e.target.id === 'not-now') location.hash = '#/';
 }
@@ -567,6 +669,12 @@ function workoutInput(e) {
 
 function workoutChange(e) {
   const t = e.target;
+  if (t.id === 'add-ex-pick') {
+    document.getElementById('add-ex-name-wrap').hidden = t.value !== '__new';
+    if (t.value === '__new') document.getElementById('add-ex-name').focus();
+    return;
+  }
+  if (t.id === 'add-ex-name') return;
   if (t.id === 'session-date') {
     if (t.value) { W.session.date = t.value; saveWorkout(); }
     return;
@@ -748,7 +856,7 @@ async function renderSettings() {
       <section class="card">
         <h2>Import program</h2>
         <p>Current: <strong>${esc(state.program ? state.program.program_name : 'none')}</strong></p>
-        <label class="btn file-btn">Choose .json or .csv file<input type="file" id="prog-file" accept=".json,.csv,application/json,text/csv,text/plain" hidden></label>
+        <label class="btn file-btn">Import a program file (.json or .csv)<input type="file" id="prog-file" accept=".json,.csv,application/json,text/csv,text/plain" hidden></label>
         <label for="prog-paste">…or paste JSON / CSV</label>
         <textarea id="prog-paste" rows="4" placeholder='{ "schema_version": 1, ... }'></textarea>
         <button class="btn" id="prog-paste-go">Import pasted text</button>
@@ -759,7 +867,7 @@ async function renderSettings() {
       <section class="card">
         <h2>Restore from backup</h2>
         <p class="muted small">Pick a workout-log_….json export. Sessions are merged by ID, so nothing is duplicated.</p>
-        <label class="btn file-btn">Choose backup file<input type="file" id="backup-file" accept=".json,application/json" hidden></label>
+        <label class="btn file-btn">Restore a backup file (.json)<input type="file" id="backup-file" accept=".json,application/json" hidden></label>
         <div id="restore-result"></div>
       </section>
 

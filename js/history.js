@@ -99,6 +99,26 @@ export function namesUsed(sessions, exerciseId) {
   return names;
 }
 
+/**
+ * Notes from the last session in which you did this exercise (any variant, not skipped):
+ * the exercise note (e.g. "cable by the rowers") and any set notes (e.g. "straps").
+ * Only that one session is used, so an old note is never shown as if it were recent.
+ * @returns {{date: string, note: string|null, setNotes: Array<{set_number:number, note:string}>}|null}
+ */
+export function lastNotes(sessions, exerciseId, current) {
+  const before = sessionsBefore(sessions, current);
+  for (let i = before.length - 1; i >= 0; i--) {
+    const ex = (before[i].exercises || []).find((e) => e.exercise_id === exerciseId);
+    if (!ex || ex.skipped || !hasAnyData(ex)) continue;
+    const note = (ex.exercise_note || '').trim() || null;
+    const setNotes = [...(ex.sets || [])].sort((a, b) => a.set_number - b.set_number)
+      .filter((st) => st.completed && (st.set_note || '').trim())
+      .map((st) => ({ set_number: st.set_number, note: st.set_note.trim() }));
+    return note || setNotes.length ? { date: before[i].date, note, setNotes } : null;
+  }
+  return null;
+}
+
 // All confirmed sets of this variant before `current`, oldest first (for PB checks).
 export function priorSets(sessions, variant, current) {
   const out = [];

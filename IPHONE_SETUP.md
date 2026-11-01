@@ -42,7 +42,7 @@ Pick **one** of these.
 ## 4. Import your program (iPhone, inside Gym Log)
 
 1. Open **Gym Log** from the Home Screen icon.
-2. Tap **Settings / Export** → under **Import program** tap **Choose .json or .csv file**.
+2. Tap the **sliders icon** (top right of Home) to open **Settings**. Under **Import program**, tap **Import a program file (.json or .csv)**. (This *imports*: it reads the file into the app. Nothing is exported.)
 3. Tap **Browse** if needed → **Downloads** (or your OneDrive folder) → your program file.
 4. Confirm **Replace "Sample Block - Upper/Lower" with "<your program>" (N weeks, N days)?** → **OK**.
 5. You should see: **Imported "<your program>": N weeks, N days. Home now opens on Week 1.**
@@ -52,7 +52,7 @@ If you see a red **Not imported** box instead, take a screenshot and send it to 
 
 ## 5. Restore your history (iPhone, same screen)
 
-1. Under **Restore from backup** tap **Choose backup file** → your history file.
+1. Under **Restore from backup** tap **Restore a backup file (.json)** → your history file.
 2. You should see **Restored: N added, 0 updated, 0 already here (file had N workouts, 0 cardio, N sets). Home now opens on Week N**, where Week N is the week after the last one you logged.
    A hand-made history file may also show small grey notes such as *No "app" field…*, *had no "kind"…* or *have no "updated_at"…*. These are normal, and nothing is lost.
 3. Restoring the same file again is safe: it says "0 added … N already here".

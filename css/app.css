@@ -275,3 +275,9 @@ body.ios { background: var(--ios-bg); color: var(--ios-text); font-family: -appl
 }
 .ios .offline { font-size: 13px; }
 .ios-card:active, .icon-btn:active:not(:disabled) { opacity: 0.6; }
+
+/* previous session's note and the add-exercise panel (workout screen) */
+.last-note { margin: 4px 0; font-size: 18px; padding: 6px 10px; border-left: 4px solid var(--accent); background: var(--input-bg); border-radius: 6px; }
+.add-ex summary { font-size: 20px; }
+.add-ex label { margin: 8px 0; }
+.add-ex .btn { width: 100%; margin-top: 8px; }
